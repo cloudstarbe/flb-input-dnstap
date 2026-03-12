@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libyaml-dev \
     libssl-dev \
     libnghttp2-dev \
+    libc-ares-dev \
     ca-certificates \
     cppcheck \
     && rm -rf /var/lib/apt/lists/*

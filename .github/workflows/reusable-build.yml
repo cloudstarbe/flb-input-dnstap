@@ -41,6 +41,7 @@ jobs:
             libyaml-dev \
             libssl-dev \
             libnghttp2-dev \
+            libc-ares-dev \
             ca-certificates \
             cppcheck
 
