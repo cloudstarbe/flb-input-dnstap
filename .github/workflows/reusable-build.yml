@@ -29,13 +29,20 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            libprotobuf-c-dev \
-            protobuf-c-compiler \
-            libldns-dev \
-            cmake \
             build-essential \
+            cmake \
             git \
-            ca-certificates
+            pkg-config \
+            protobuf-c-compiler \
+            libprotobuf-c-dev \
+            libldns-dev \
+            flex \
+            bison \
+            libyaml-dev \
+            libssl-dev \
+            libnghttp2-dev \
+            ca-certificates \
+            cppcheck
 
       - name: Clone and prepare Fluent Bit ${{ inputs.flb_version }}
         run: |
