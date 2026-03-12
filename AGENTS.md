@@ -28,7 +28,9 @@ cmake -DFLB_SOURCE=/path/to/fluent-bit ../ && make -j$(nproc)
 # Static analysis
 cppcheck --enable=all --error-exitcode=1 \
   --suppress=missingInclude \
-  -I in_dnstap/ in_dnstap/dnstap_decode.c in_dnstap/dnstap_parser.c
+  --suppress=*:in_dnstap/dnstap.pb-c.h \
+  -i in_dnstap/dnstap.pb-c.c \
+  in_dnstap/
 ```
 
 ## Source Map

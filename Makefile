@@ -21,7 +21,7 @@ test-san:
 	@$(DOCKER_CMD) "mkdir -p build-san && cd build-san && cmake -DCMAKE_C_FLAGS=\"-fsanitize=address,undefined -fno-omit-frame-pointer -g\" -DCMAKE_EXE_LINKER_FLAGS=\"-fsanitize=address,undefined\" ../tests && make -j$$(nproc) && ASAN_OPTIONS=detect_leaks=1:abort_on_error=1 ctest --output-on-failure"
 
 check:
-	@$(DOCKER_CMD) "cppcheck --enable=all --error-exitcode=1 --suppress=missingInclude -I in_dnstap/ in_dnstap/dnstap_decode.c in_dnstap/dnstap_parser.c in_dnstap/in_dnstap.c"
+	@$(DOCKER_CMD) "cppcheck --enable=all --error-exitcode=1 --suppress=missingInclude --suppress=*:in_dnstap/dnstap.pb-c.h -i in_dnstap/dnstap.pb-c.c in_dnstap/"
 
 clean:
 	@echo "==> Cleaning host build directories..."

@@ -42,5 +42,7 @@ jobs:
             --enable=warning,performance,portability \
             --error-exitcode=1 \
             --suppress=missingIncludeSystem \
+            --suppress=*:in_dnstap/dnstap.pb-c.h \
             --inline-suppr \
+            -i in_dnstap/dnstap.pb-c.c \
             in_dnstap/
