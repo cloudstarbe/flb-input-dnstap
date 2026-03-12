@@ -1,0 +1,46 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        flb_version:
+          - "v3.0.7"
+          - "v3.1.10"
+          - "v3.2.10"
+          - "v4.0.14"
+          - "v4.1.2"
+          - "v4.2.3"
+    uses: ./.github/workflows/reusable-build.yml
+    with:
+      flb_version: ${{ matrix.flb_version }}
+      artifact_prefix: flb-input-dnstap
+
+  static-analysis:
+    name: Static analysis (cppcheck)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin source
+        uses: actions/checkout@v4
+
+      - name: Install cppcheck
+        run: sudo apt-get update && sudo apt-get install -y cppcheck
+
+      - name: Run cppcheck
+        run: |
+          cppcheck \
+            --enable=warning,performance,portability \
+            --error-exitcode=1 \
+            --suppress=missingIncludeSystem \
+            --inline-suppr \
+            in_dnstap/

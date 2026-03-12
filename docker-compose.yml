@@ -1,0 +1,14 @@
+services:
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DEBIAN_VERSION: bookworm
+        FLB_VERSION: v4.2.3
+    # For Apple Silicon targeting amd64:
+    platform: linux/amd64
+    volumes:
+      - ./:/workspaces/fluent-bit
+    tty: true
+    stdin_open: true

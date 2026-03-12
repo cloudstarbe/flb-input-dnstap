@@ -1,0 +1,66 @@
+name: Reusable Build
+
+on:
+  workflow_call:
+    inputs:
+      flb_version:
+        required: true
+        type: string
+      artifact_prefix:
+        required: true
+        type: string
+        description: "Prefix for the uploaded artifact name"
+      prepare_release:
+        required: false
+        type: boolean
+        default: false
+        description: "If true, rename .so for release distribution"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+    steps:
+      - name: Checkout plugin source
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            libprotobuf-c-dev \
+            protobuf-c-compiler \
+            libldns-dev \
+            cmake \
+            build-essential \
+            git \
+            ca-certificates
+
+      - name: Clone and prepare Fluent Bit ${{ inputs.flb_version }}
+        run: |
+          git clone --depth 1 --branch ${{ inputs.flb_version }} https://github.com/fluent/fluent-bit.git /tmp/fluent-bit
+          cd /tmp/fluent-bit/build
+          cmake ..
+
+      - name: Build plugin
+        run: |
+          mkdir -p build
+          cd build
+          cmake -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../
+          make
+
+      - name: Prepare release assets
+        if: ${{ inputs.prepare_release }}
+        run: |
+          FLB_SHORT=$(echo "${{ inputs.flb_version }}" | sed 's/^v//')
+          mkdir -p dist
+          cp build/flb-in_dnstap.so "dist/flb-in_dnstap-flb${FLB_SHORT}.so"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_prefix }}-${{ inputs.flb_version }}
+          path: |
+            ${{ inputs.prepare_release && 'dist/' || 'build/flb-in_dnstap.so' }}
+          retention-days: ${{ inputs.prepare_release && 90 || 7 }}
