@@ -65,10 +65,18 @@ jobs:
           mkdir -p dist
           cp build/flb-in_dnstap.so "dist/flb-in_dnstap-flb${FLB_SHORT}.so"
 
-      - name: Upload artifacts
+      - name: Upload release artifacts
+        if: ${{ inputs.prepare_release }}
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_prefix }}-${{ inputs.flb_version }}
-          path: |
-            ${{ inputs.prepare_release && 'dist/' || 'build/flb-in_dnstap.so' }}
-          retention-days: ${{ inputs.prepare_release && 90 || 7 }}
+          path: dist/
+          retention-days: 90
+
+      - name: Upload PR artifacts
+        if: ${{ !inputs.prepare_release }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_prefix }}-${{ inputs.flb_version }}
+          path: build/flb-in_dnstap.so
+          retention-days: 7
