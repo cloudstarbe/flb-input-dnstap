@@ -52,6 +52,7 @@ RUN git clone --depth 1 --branch ${FLB_VERSION} \
     && mkdir -p /tmp/fluent-bit/build \
     && cd /tmp/fluent-bit/build \
     && cmake \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
     -DFLB_EXAMPLES=Off \
     -DFLB_SHARED_LIB=Off \
     -DFLB_PROXY_GO=Off \

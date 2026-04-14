@@ -66,13 +66,13 @@ jobs:
         run: |
           git clone --depth 1 --branch ${{ inputs.flb_version }} https://github.com/fluent/fluent-bit.git /tmp/fluent-bit
           cd /tmp/fluent-bit/build
-          cmake ..
+          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 ..
 
       - name: Build plugin
         run: |
           mkdir -p build
           cd build
-          cmake -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../
+          cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../
           make
 
       - name: Verify no dynamic ldns/protobuf-c dependency

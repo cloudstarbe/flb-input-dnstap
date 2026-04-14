@@ -6,7 +6,7 @@ all: clean build test check
 
 build:
 	@echo "==> Compiling flb-in_dnstap.so in Docker..."
-	@$(DOCKER_CMD) "mkdir -p build && cd build && cmake -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../ && make -j$$(nproc)"
+	@$(DOCKER_CMD) "mkdir -p build && cd build && cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../ && make -j$$(nproc)"
 
 shell:
 	@echo "==> Opening interactive bash shell in devcontainer..."
