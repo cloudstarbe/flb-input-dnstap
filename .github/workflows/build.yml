@@ -6,21 +6,29 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.load.outputs.versions }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: load
+        run: echo "versions=$(cat .github/flb-versions.json)" >> $GITHUB_OUTPUT
+
   build:
+    needs: matrix
     strategy:
       fail-fast: false
       matrix:
-        flb_version:
-          - "v3.0.7"
-          - "v3.1.10"
-          - "v3.2.10"
-          - "v4.0.14"
-          - "v4.1.2"
-          - "v4.2.3"
+        flb_version: ${{ fromJSON(needs.matrix.outputs.versions) }}
     uses: ./.github/workflows/reusable-build.yml
     with:
       flb_version: ${{ matrix.flb_version }}

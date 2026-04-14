@@ -31,6 +31,7 @@
 build/
 build-test/
 build-san/
+build-dbg/
 
 # CMake generated files and directories
 CMakeCache.txt

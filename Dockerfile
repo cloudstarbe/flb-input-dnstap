@@ -46,7 +46,7 @@ COPY scripts/build-static-deps.sh /tmp/build-static-deps.sh
 RUN /tmp/build-static-deps.sh /usr/local && rm /tmp/build-static-deps.sh
 
 # Clone Fluent Bit source (headers only — no full build needed)
-ARG FLB_VERSION=v4.2.3
+ARG FLB_VERSION=v4.2.4
 RUN git clone --depth 1 --branch ${FLB_VERSION} \
     https://github.com/fluent/fluent-bit.git /tmp/fluent-bit \
     && mkdir -p /tmp/fluent-bit/build \

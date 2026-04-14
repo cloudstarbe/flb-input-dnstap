@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         UBUNTU_VERSION: "20.04"
-        FLB_VERSION: v4.2.3
+        FLB_VERSION: v4.2.4
     # For Apple Silicon targeting amd64:
     platform: linux/amd64
     volumes:

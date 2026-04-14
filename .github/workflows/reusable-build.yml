@@ -52,7 +52,6 @@ jobs:
             libssl-dev \
             libnghttp2-dev \
             libc-ares-dev \
-            cppcheck \
             autoconf \
             automake \
             libtool \
@@ -87,24 +86,15 @@ jobs:
           echo "OK: No dynamic libldns/libprotobuf-c dependency found."
 
       - name: Prepare release assets
-        if: ${{ inputs.prepare_release }}
+        if: inputs.prepare_release
         run: |
           FLB_SHORT=$(echo "${{ inputs.flb_version }}" | sed 's/^v//')
           mkdir -p dist
           cp build/flb-in_dnstap.so "dist/flb-in_dnstap-flb${FLB_SHORT}.so"
 
-      - name: Upload release artifacts
-        if: ${{ inputs.prepare_release }}
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ inputs.artifact_prefix }}-${{ inputs.flb_version }}
-          path: dist/
-          retention-days: 90
-
-      - name: Upload PR artifacts
-        if: ${{ !inputs.prepare_release }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ inputs.artifact_prefix }}-${{ inputs.flb_version }}
-          path: build/flb-in_dnstap.so
-          retention-days: 7
+          path: ${{ inputs.prepare_release && 'dist/' || 'build/flb-in_dnstap.so' }}
+          retention-days: ${{ inputs.prepare_release && 90 || 7 }}

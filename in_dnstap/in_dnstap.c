@@ -35,7 +35,7 @@ static int cb_dnstap_collect(struct flb_input_instance *in,
 static int dnstap_conn_event(void *data);
 
 /* ------------------------------------------------------------------ */
-/* Helpers                                                             */
+/* Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
 static int remove_existing_socket_file(const char *path) {
@@ -226,7 +226,7 @@ int encode_dnstap_record(struct flb_in_dnstap_config *ctx,
 }
 
 /* ------------------------------------------------------------------ */
-/* Connection management                                               */
+/* Connection management                                              */
 /* ------------------------------------------------------------------ */
 
 static struct dnstap_conn *dnstap_conn_add(struct flb_connection *connection,
@@ -375,8 +375,27 @@ static int dnstap_conn_event(void *data) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Plugin callbacks                                                    */
+/* Plugin callbacks                                                   */
 /* ------------------------------------------------------------------ */
+
+/*
+ * ABI compatibility fix: Bypass the inline `flb_input_config_map_set()`!
+ * The inline function reads fields (`net_config_map` and `net_properties`)
+ * which appear *after* `flb_net_setup` in `struct flb_input_instance`.
+ * Fluent Bit v4.0.14 increased the size of `flb_net_setup` by 8 bytes.
+ * When a plugin compiled for 4.0.14 is loaded in a 4.0.0 daemon, the
+ * trailing fields are shifted, causing `flb_input_config_map_set` to
+ * read uninitialized memory and crash trying to parse a garbage pointer.
+ *
+ * `config_map` and `properties` are defined before `net_setup`, so their
+ * ABI offsets remain stable across these patch versions.
+ */
+static int safe_input_config_map_set(struct flb_input_instance *ins, void *context) {
+  if (ins->config_map) {
+    return flb_config_map_set(&ins->properties, ins->config_map, context);
+  }
+  return -1;
+}
 
 static int cb_dnstap_init(struct flb_input_instance *in,
                           struct flb_config *config, void *data) {
@@ -393,8 +412,8 @@ static int cb_dnstap_init(struct flb_input_instance *in,
   ctx->ins = in;
   ctx->collector_id = -1;
 
-  /* Load config map */
-  ret = flb_input_config_map_set(in, (void *)ctx);
+  /* Load config map (using ABI-safe helper) */
+  ret = safe_input_config_map_set(in, (void *)ctx);
   if (ret == -1) {
     flb_plg_error(in, "unable to load configuration");
     flb_free(ctx);
@@ -553,7 +572,7 @@ static int cb_dnstap_exit(void *data, struct flb_config *config) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Config map & plugin registration                                    */
+/* Config map & plugin registration                                   */
 /* ------------------------------------------------------------------ */
 
 #pragma GCC diagnostic push
