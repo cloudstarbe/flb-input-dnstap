@@ -156,8 +156,8 @@ dnstap:
 
 - CMake ≥ 3.12
 - GCC or Clang with C99 support
-- `libprotobuf-c-dev`, `protobuf-c-compiler` — Protocol Buffers C
-- `libldns-dev` — LDNS Library
+- `libprotobuf-c-dev`, `protobuf-c-compiler` — Protocol Buffers C (dev container only)
+- `libldns-dev` — LDNS Library (dev container only; statically linked in release builds)
 - Fluent Bit source tree (for plugin build only, not for tests)
 
 ### Project Structure
@@ -187,8 +187,10 @@ flb-input-dnstap/
 │   ├── release.yml           # CD: tagged release publishing
 │   └── reusable-build.yml    # Shared build steps across FLB matrix
 ├── Makefile                  # Docker wrapper commands for testing
-├── Dockerfile                # Debian-based build environment container
+├── Dockerfile                # Ubuntu-based build environment container
 ├── docker-compose.yml        # Docker compose service definition
+├── scripts/
+│   └── build-static-deps.sh  # Builds ldns + protobuf-c as static archives
 ├── CMakeLists.txt            # Root build with hardening flags
 └── README.md
 ```
@@ -200,7 +202,7 @@ flb-input-dnstap/
 The easiest way to build and test the plugin is using the included `Makefile` which wraps `docker compose`.
 
 ```bash
-# Default: Debian 12 (bookworm)
+# Default: Ubuntu 20.04 (focal)
 docker compose build
 
 # Compile the plugin (creates build/flb-in_dnstap.so)
@@ -265,7 +267,7 @@ Triggered on push/PR to `main`. Runs parallel jobs based on `reusable-build.yml`
 
 | Job | Description |
 |-----|-------------|
-| **build** | Compiles plugin explicitly against 6 Fluent Bit versions (v3.0–v4.2). Guaranteed compatibility using `debian:bookworm` container base. |
+| **build** | Compiles plugin against 6 Fluent Bit versions (v3.0–v4.2) on `ubuntu:20.04`. Dependencies (ldns, protobuf-c) are statically linked — no runtime library requirements on target. |
 | **static-analysis** | Runs `cppcheck` with warning/performance/portability checks |
 
 *(Note: Unit assertions and sanitizers run as explicit steps inside the GitHub actions workflow during native compilation).*

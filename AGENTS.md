@@ -8,10 +8,10 @@ A Fluent Bit input plugin that ingests dnstap (DNS Tap) telemetry from DNS serve
 
 **Language**: C (C99)
 **Build system**: CMake 3.12+
-**Target platform**: Linux (Debian 11 / Debian 12 / Debian 13 / Ubuntu 22.04+ / Ubuntu 24.04+)
+**Target platform**: Linux (Debian 11 / Debian 12 / Debian 13 / Ubuntu 20.04+)
 **FLB version**: Fluent Bit v3.0.x through v4.2.x
 
-> **Note:** The CI/CD pipelines compile artifacts natively on `debian:bookworm` (Debian 12) to guarantee `GLIBC_2.36` compatibility across all designated Linux targets.
+> **Note:** The CI/CD pipelines compile artifacts on `ubuntu:20.04` (GLIBC 2.31). Dependencies `ldns` and `protobuf-c` are statically linked into the `.so` — the plugin has zero runtime dependency on system libldns or libprotobuf-c.
 
 ## Build & Test
 

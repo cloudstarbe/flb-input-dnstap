@@ -9,33 +9,58 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wformat -Wformat-security")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -D_FORTIFY_SOURCE=2")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,relro,-z,now")
 
-# Find required libraries via pkg-config
-find_package(PkgConfig REQUIRED)
+# ---------------------------------------------------------------
+# Static dependency discovery (libldns.a, libprotobuf-c.a)
+# These are built from source via scripts/build-static-deps.sh
+# and eliminate runtime SONAME dependencies on the target system.
+# ---------------------------------------------------------------
 
-pkg_check_modules(PROTOBUF_C REQUIRED libprotobuf-c)
-pkg_check_modules(LDNS REQUIRED ldns)
+# Allow overriding the search prefix (defaults to /usr/local)
+set(STATIC_DEPS_PREFIX "/usr/local" CACHE PATH "Prefix where static libs are installed")
 
-# Macro to build source code
+# Find static archives — require .a files specifically
+set(_ORIG_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
+set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
+
+find_library(LDNS_STATIC_LIB NAMES ldns
+  PATHS ${STATIC_DEPS_PREFIX}/lib
+  NO_DEFAULT_PATH)
+find_library(PROTOBUF_C_STATIC_LIB NAMES protobuf-c
+  PATHS ${STATIC_DEPS_PREFIX}/lib
+  NO_DEFAULT_PATH)
+
+set(CMAKE_FIND_LIBRARY_SUFFIXES ${_ORIG_SUFFIXES})
+
+if(NOT LDNS_STATIC_LIB)
+  message(FATAL_ERROR "libldns.a not found in ${STATIC_DEPS_PREFIX}/lib. "
+    "Run scripts/build-static-deps.sh first.")
+endif()
+if(NOT PROTOBUF_C_STATIC_LIB)
+  message(FATAL_ERROR "libprotobuf-c.a not found in ${STATIC_DEPS_PREFIX}/lib. "
+    "Run scripts/build-static-deps.sh first.")
+endif()
+
+message(STATUS "Static ldns:       ${LDNS_STATIC_LIB}")
+message(STATUS "Static protobuf-c: ${PROTOBUF_C_STATIC_LIB}")
+
+# OpenSSL is required by ldns (linked dynamically — available on all targets)
+find_package(OpenSSL REQUIRED)
+
+# Macro to build plugin source code
 macro(FLB_PLUGIN name src deps)
   add_library(flb-${name} SHARED ${src})
   set_target_properties(flb-${name} PROPERTIES PREFIX "")
   set_target_properties(flb-${name} PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
   target_include_directories(flb-${name} PRIVATE
-
-    ${PROTOBUF_C_INCLUDE_DIRS}
-    ${LDNS_INCLUDE_DIRS}
+    ${STATIC_DEPS_PREFIX}/include
   )
   target_link_libraries(flb-${name}
     ${deps}
-
-    ${PROTOBUF_C_LIBRARIES}
-    ${LDNS_LIBRARIES}
-  )
-  target_link_directories(flb-${name} PRIVATE
-
-    ${PROTOBUF_C_LIBRARY_DIRS}
-    ${LDNS_LIBRARY_DIRS}
+    ${LDNS_STATIC_LIB}
+    ${PROTOBUF_C_STATIC_LIB}
+    OpenSSL::SSL
+    OpenSSL::Crypto
   )
 endmacro()
 

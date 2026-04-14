@@ -20,30 +20,47 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: debian:bookworm
+      image: ubuntu:20.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Checkout plugin source
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install build dependencies
         run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            software-properties-common \
+            gpg \
+            wget
+          wget -qO- https://apt.kitware.com/keys/kitware-archive-latest.asc \
+            | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main" \
+            > /etc/apt/sources.list.d/kitware.list
           apt-get update
           apt-get install -y --no-install-recommends \
             build-essential \
             cmake \
             git \
             pkg-config \
-            protobuf-c-compiler \
-            libprotobuf-c-dev \
-            libldns-dev \
+            curl \
+            ca-certificates \
             flex \
             bison \
             libyaml-dev \
             libssl-dev \
             libnghttp2-dev \
             libc-ares-dev \
-            ca-certificates \
-            cppcheck
+            cppcheck \
+            autoconf \
+            automake \
+            libtool \
+            protobuf-compiler \
+            libprotobuf-dev
+
+      - name: Build static dependencies (ldns + protobuf-c)
+        run: ./scripts/build-static-deps.sh /usr/local
 
       - name: Clone and prepare Fluent Bit ${{ inputs.flb_version }}
         run: |
@@ -57,6 +74,17 @@ jobs:
           cd build
           cmake -DFLB_SOURCE=/tmp/fluent-bit -DPLUGIN_NAME=in_dnstap ../
           make
+
+      - name: Verify no dynamic ldns/protobuf-c dependency
+        run: |
+          echo "==> Checking shared library dependencies..."
+          ldd build/flb-in_dnstap.so
+          echo "---"
+          if ldd build/flb-in_dnstap.so | grep -qE 'libldns|libprotobuf-c'; then
+            echo "ERROR: Plugin still has dynamic dependency on libldns or libprotobuf-c!"
+            exit 1
+          fi
+          echo "OK: No dynamic libldns/libprotobuf-c dependency found."
 
       - name: Prepare release assets
         if: ${{ inputs.prepare_release }}
