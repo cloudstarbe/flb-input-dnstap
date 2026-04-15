@@ -590,10 +590,10 @@ static struct flb_config_map config_map[] = {
     {FLB_CONFIG_MAP_BOOL, "use_dnstap_timestamp", "false", 0, FLB_TRUE,
      offsetof(struct flb_in_dnstap_config, use_dnstap_timestamp),
      "Use the original dnstap wire timestamp instead of current time"},
-    {FLB_CONFIG_MAP_SIZE, "Buffer_Chunk_Size", "32K", 0, FLB_TRUE,
+    {FLB_CONFIG_MAP_SIZE, "buffer_chunk_size", "32K", 0, FLB_TRUE,
      offsetof(struct flb_in_dnstap_config, buffer_chunk_size),
      "Chunk size for the incoming Unix socket buffer (default: 32K)"},
-    {FLB_CONFIG_MAP_SIZE, "Buffer_Max_Size", "2M", 0, FLB_TRUE,
+    {FLB_CONFIG_MAP_SIZE, "buffer_max_size", "2M", 0, FLB_TRUE,
      offsetof(struct flb_in_dnstap_config, buffer_max_size),
      "Maximum frame limit size for incoming Unix socket data (default: 2M)"},
     /* EOF */

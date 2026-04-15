@@ -16,6 +16,7 @@ A Fluent Bit input plugin that receives [dnstap](https://dnstap.info/) logs from
 | 4.0.x      | ✅     |
 | 4.1.x      | ✅     |
 | 4.2.x      | ✅     |
+| 5.0.x      | ✅     |
 
 ## Features
 
@@ -46,8 +47,8 @@ A Fluent Bit input plugin that receives [dnstap](https://dnstap.info/) logs from
 Pre-built binaries are available on the [Releases page](https://github.com/cloudstarbe/flb-input-dnstap/releases). Each release includes a `.so` file compiled natively per Fluent Bit version.
 
 ```bash
-# Example: Downloading for Fluent Bit v4.2.3
-wget https://github.com/cloudstarbe/flb-input-dnstap/releases/download/v1.0.0/flb-in_dnstap-flb4.2.3.so -O /usr/lib/fluent-bit/plugins/flb-in_dnstap.so
+# Example: Downloading for Fluent Bit v4.2.4
+wget https://github.com/cloudstarbe/flb-input-dnstap/releases/download/v0.1.0/flb-in_dnstap-flb4.2.4.so -O /usr/lib/fluent-bit/plugins/flb-in_dnstap.so
 ```
 
 ### Configure
@@ -67,12 +68,13 @@ Configure the input element in your `fluent-bit.conf` file:
 
 [INPUT]
     Name                  dnstap
+    Tag                   dnsdist
     socket_path           /var/run/dnstap.sock
     socket_permissions    0666
 
 [OUTPUT]
-    Name              stdout
-    Match             *
+    Name                  stdout
+    Match                 dnsdist
 ```
 
 ### Configuration Options
@@ -83,8 +85,8 @@ Configure the input element in your `fluent-bit.conf` file:
 | `socket_permissions` | Octal permissions for the socket | *(not set)* |
 | `max_connections` | Maximum concurrent dnstap connections | `256` |
 | `use_dnstap_timestamp` | Use original wire timestamps from dnstap instead of current processing time | `false` |
-| `Buffer_Chunk_Size` | Chunk size for the incoming Unix socket buffer | `32K` |
-| `Buffer_Max_Size` | Maximum frame limit size for incoming Unix socket data | `2M` |
+| `buffer_chunk_size` | Chunk size for the incoming Unix socket buffer | `32K` |
+| `buffer_max_size` | Maximum frame limit size for incoming Unix socket data | `2M` |
 
 ---
 
