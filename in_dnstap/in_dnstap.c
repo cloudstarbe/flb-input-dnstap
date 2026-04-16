@@ -69,17 +69,19 @@ int encode_dnstap_record(struct flb_in_dnstap_config *ctx,
     return -1;
 
   /* Set event timestamp: use wire time from dnstap if configured,
-   * otherwise fall back to current processing time. */
+   * otherwise fall back to current processing time.
+   * For responses (response_time_sec > 0), prefer response_time;
+   * for queries, use query_time. */
   if (ctx->use_dnstap_timestamp &&
       (d->query_time_sec > 0 || d->response_time_sec > 0)) {
     struct flb_time tm;
     flb_time_zero(&tm);
-    if (d->query_time_sec > 0) {
-      tm.tm.tv_sec  = (time_t)d->query_time_sec;
-      tm.tm.tv_nsec = (long)d->query_time_nsec;
-    } else {
+    if (d->response_time_sec > 0) {
       tm.tm.tv_sec  = (time_t)d->response_time_sec;
       tm.tm.tv_nsec = (long)d->response_time_nsec;
+    } else {
+      tm.tm.tv_sec  = (time_t)d->query_time_sec;
+      tm.tm.tv_nsec = (long)d->query_time_nsec;
     }
     ret = flb_log_event_encoder_set_timestamp(enc, &tm);
   } else {

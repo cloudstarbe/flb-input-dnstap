@@ -757,6 +757,54 @@ static void test_decode_timestamps_query_only(void)
     TEST_PASS();
 }
 
+static void test_response_timestamp_preferred(void)
+{
+    TEST_START("response_timestamp_preferred_over_query");
+
+    uint8_t dns_wire[512];
+    size_t dns_len = build_dns_query(dns_wire, sizeof(dns_wire), "resp.example.com", 1);
+    ASSERT(dns_len > 0);
+
+    uint8_t dns_resp[512];
+    size_t resp_len = build_dns_response(dns_resp, sizeof(dns_resp),
+                                          "resp.example.com", 1, 0);
+    ASSERT(resp_len > 0);
+
+    /* Response has BOTH query_time and response_time set */
+    uint64_t q_sec  = 1710000000;
+    uint32_t q_nsec = 100000000;
+    uint64_t r_sec  = 1710000002;   /* 2 seconds later */
+    uint32_t r_nsec = 200000000;
+
+    size_t pb_len;
+    uint8_t *pb = build_dnstap_msg_ts(&pb_len,
+                                       "resp-ts-test", "v1",
+                                       DNSTAP__MESSAGE__TYPE__CLIENT_RESPONSE,
+                                       DNSTAP__SOCKET_FAMILY__INET,
+                                       DNSTAP__SOCKET_PROTOCOL__UDP,
+                                       NULL, 0, 0,
+                                       dns_wire, dns_len,
+                                       dns_resp, resp_len,
+                                       q_sec, q_nsec, r_sec, r_nsec);
+    ASSERT(pb != NULL);
+
+    struct dnstap_decoded d;
+    ASSERT_INT_EQ(dnstap_decode(pb, pb_len, &d), 0);
+
+    /* Both timestamps must be populated */
+    ASSERT(d.query_time_sec == q_sec);
+    ASSERT(d.query_time_nsec == q_nsec);
+    ASSERT(d.response_time_sec == r_sec);
+    ASSERT(d.response_time_nsec == r_nsec);
+
+    /* Semantic check: for a response, response_time > query_time */
+    ASSERT(d.response_time_sec > d.query_time_sec);
+
+    dnstap_decoded_destroy(&d);
+    free(pb);
+    TEST_PASS();
+}
+
 /* ------------------------------------------------------------------ */
 /* Main                                                                */
 /* ------------------------------------------------------------------ */
@@ -785,6 +833,7 @@ int main(void)
     test_decode_qclass_strings();
     test_decode_wire_timestamps();
     test_decode_timestamps_query_only();
+    test_response_timestamp_preferred();
 
     printf("\n%d/%d tests passed\n", tests_passed, tests_run);
     return (tests_passed == tests_run) ? 0 : 1;
